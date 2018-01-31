@@ -11,13 +11,15 @@ import android.view.View;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
-import java.time.Year;
 import java.util.Calendar;
+
+import static java.util.Calendar.HOUR_OF_DAY;
+import static java.util.Calendar.MINUTE;
 
 public class MainActivity extends AppCompatActivity {
 
     TimePicker timePicker;
-
+    long diffMins =0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,35 +31,65 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                Calendar calendar = Calendar.getInstance();
+//              Get the target and current times
+                Calendar tarCalendar = Calendar.getInstance();
+                Calendar curCalendar = Calendar.getInstance();
 
+//              The Target time in milliseconds
                 if(Build.VERSION.SDK_INT >=23){
-                    calendar.set(
-                            calendar.get(Calendar.YEAR),
-                            calendar.get(Calendar.MONTH),
-                            calendar.get(Calendar.DAY_OF_MONTH),
+                    tarCalendar.set(
+                            tarCalendar.get(Calendar.YEAR),
+                            tarCalendar.get(Calendar.MONTH),
+                            tarCalendar.get(Calendar.DAY_OF_MONTH),
                             timePicker.getHour(),
                             timePicker.getMinute(),
                             0
                     );
                 }else{
-                    calendar.set(
-                            calendar.get(Calendar.YEAR),
-                            calendar.get(Calendar.MONTH),
-                            calendar.get(Calendar.DAY_OF_MONTH),
+                    tarCalendar.set(
+                            tarCalendar.get(Calendar.YEAR),
+                            tarCalendar.get(Calendar.MONTH),
+                            tarCalendar.get(Calendar.DAY_OF_MONTH),
                             timePicker.getCurrentHour(),
                             timePicker.getCurrentMinute(),
                             0
                     );
                 }
 
-                setAlarm(calendar.getTimeInMillis());
+//              The current time in milliseconds
+                curCalendar.set(
+                        curCalendar.get(Calendar.YEAR),
+                        curCalendar.get(Calendar.MONTH),
+                        curCalendar.get(Calendar.DAY_OF_MONTH),
+                        curCalendar.get(Calendar.HOUR),
+                        curCalendar.get(MINUTE),
+                        0
+                );
+
+                long curMillis =  curCalendar.getTimeInMillis();
+                long tarMillis =  tarCalendar.getTimeInMillis();
+
+//              Set the target time as an alarm
+                setAlarm(tarMillis);
+
+//              Calculate the time until the alarm in hours and minutes
+                diffMins = (tarMillis - curMillis)/(1000*60);
+                int hours = (int) diffMins /(60);
+                int mins = (int) diffMins - (hours*60);
+                String timeVals = String.valueOf(hours) + " Hours " + String.valueOf(mins) + " Minutes";
+
+//                System.out.println(" -Hours are: "  + hours + " -timeVals: " + timeVals + " -Diff " + diffMins);
+//                System.out.println("The timepicker Hour " + curCalendar.get(HOUR_OF_DAY)  + " and Minute: "  + curCalendar.get(MINUTE));
+
+                Toast.makeText(MainActivity.this, timeVals, Toast.LENGTH_LONG).show();
 
             }
         });
     }
 
+
     private void setAlarm(long timeInMillis){
+
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 
         Intent intent = new Intent(this, MyAlarm.class);
@@ -66,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
 
         alarmManager.setRepeating(alarmManager.RTC, timeInMillis, AlarmManager.INTERVAL_DAY, pendingIntent);
 
-        Toast.makeText(this, "Alarm is set", Toast.LENGTH_SHORT).show();
+//        Toast.makeText(this, "Alarm is set", Toast.LENGTH_SHORT).show();
 
     }
 }
